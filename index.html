@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הסיפור של עדה ורני</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts for elegant Hebrew text -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&family=Dancing+Script:wght@700&family=Playpen+Sans+Hebrew:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Applying the M PLUS Rounded 1c font to the whole page */
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            overflow: hidden; /* Prevent scrolling the main page */
+        }
+
+        /* The book container holds all the pages */
+        .book {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            perspective: 2500px; 
+        }
+
+        /* Each scene is a page */
+        .page {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: #fff; 
+            transform-origin: right center; 
+            transition: transform 1s ease-in-out;
+            backface-visibility: hidden; /* Hides the back of the element during rotation */
+            display: flex;
+            flex-direction: column;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-style: solid;
+            border-color: #f5eeda;
+            border-width: 3vh 5vw;
+            box-shadow: inset 0 0 0 1px #d1c7b8; /* This creates the thin inner line */
+        }
+        
+        .page.flipped {
+            transform: rotateY(180deg);
+        }
+
+        /* Slick Pagination Styling */
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background-color: rgba(0, 0, 0, 0.3);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            line-height: 1;
+            cursor: pointer;
+            z-index: 50;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+        .nav-arrow:hover:not(:disabled) {
+            background-color: rgba(0, 0, 0, 0.6);
+            transform: translateY(-50%) scale(1.1);
+        }
+        .nav-arrow:disabled {
+            opacity: 0.2;
+            cursor: not-allowed;
+        }
+        #next-page-arrow {
+            left: 20px;
+        }
+        #prev-page-arrow {
+            right: 20px;
+        }
+
+        #page-indicator {
+            position: fixed;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.4);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            z-index: 50;
+            transition: opacity 0.3s ease;
+        }
+        
+        /* Styling for the text overlay */
+        .text-overlay {
+            margin-top: auto; /* Pushes the container to the bottom */
+            width: 100%;
+            padding: 4rem 2rem 2rem 2rem; /* More padding at the top for the gradient */
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
+            color: white;
+            text-align: center;
+        }
+
+        .text-overlay p {
+            font-size: calc(1.75rem * var(--font-scale, 1));
+            line-height: 1.75;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+        
+        .text-overlay h1 {
+            font-size: calc(2.75rem * var(--font-scale, 1));
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        }
+        
+        @media (min-width: 768px) {
+            .text-overlay p {
+                font-size: calc(2.25rem * var(--font-scale, 1));
+            }
+            .text-overlay h1 {
+                font-size: calc(4.75rem * var(--font-scale, 1));
+            }
+        }
+
+        /* Typewriter effect styles */
+        .story-text::after {
+            content: '|';
+            font-weight: 200;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            from, to { color: transparent }
+            50% { color: white; }
+        }
+        
+        .story-text.finished-typing::after {
+            content: '';
+            animation: none;
+        }
+        
+        /* Styles for hiding UI during autoplay */
+        .ui-element {
+            transition: opacity 0.4s ease-in-out;
+        }
+        body.autoplay-active .ui-element {
+            opacity: 0;
+            pointer-events: none;
+        }
+        body.autoplay-active:hover .ui-element {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        body.autoplay-active .nav-arrow {
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        /* Greeting card styles for the last page */
+        .greeting-card-page {
+            background-color: #fdfaf3; /* Creamy white */
+            border: none;
+            box-shadow: none;
+            padding: 0;
+            color: #4B5563; /* text-gray-600 */
+        }
+        .greeting-card-content {
+            border: 1px solid #dcd1c0;
+            box-shadow: inset 0 0 0 4px #f5eeda;
+            margin: 2rem;
+            padding: 2rem;
+            height: calc(100% - 4rem);
+            width: calc(100% - 4rem);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .greeting-card-content h2 {
+            font-family: 'Dancing Script', cursive;
+            color: #1F2937; /* text-gray-800 */
+            font-size: calc(3.75rem * var(--font-scale, 1));
+        }
+        .greeting-card-content p {
+            font-size: calc(1.5rem * var(--font-scale, 1));
+        }
+        @media (min-width: 768px) {
+             .greeting-card-content h2 {
+                font-size: calc(6rem * var(--font-scale, 1));
+             }
+             .greeting-card-content p {
+                font-size: calc(2rem * var(--font-scale, 1));
+             }
+        }
+        
+        /* UPDATED: Specific larger font size for the front cover */
+        #front-cover-content h2 {
+            font-size: calc(4.5rem * var(--font-scale, 1));
+        }
+        @media (min-width: 768px) {
+            #front-cover-content h2 {
+                font-size: calc(7rem * var(--font-scale, 1));
+            }
+        }
+
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="book">
+        <!-- Front Page -->
+        <div class="page greeting-card-page">
+             <div id="front-cover-content" class="greeting-card-content">
+                <h2 class="font-bold" style="font-family: 'Playpen Sans Hebrew', cursive;">שעת סיפור</h2>
+             </div>
+        </div>
+
+        <!-- Page 2: Header Section -->
+        <div class="page" style="background-image: url('https://i.postimg.cc/nrg3GqJ3/base.png');">
+            <div class="text-overlay">
+                <h1 class="font-bold">משימה: 7-7-0-7-5</h1>
+                <p class="mt-3">התיק הסודי של עדה ורני</p>
+                <p class="mt-6 text-gray-300 animate-pulse">הסיפור עומד להתחיל...</p>
+            </div>
+        </div>
+
+        <!-- Page 3: Scene 1 -->
+        <div class="page" style="background-image: url('https://i.postimg.cc/26Hc3PXR/scene1.png');">
+            <div class="text-overlay">
+                <p class="story-text">במשך שנים, שניים מהסוכנים המבריקים ביותר של האקדמיה פעלו באותו המטה - האוניברסיטה העברית. סוכנת אחת, עדה, מומחית למודיעין תת-קרקעי וגמישות אנושית. הסוכן השני, רני, אגדה בתחום הגיאוגרפיה, ההיסטוריה, וניתוח שטח. אך דרכיהם מעולם לא הצטלבו, עד לפני שבע שנים, בפגישת ריגול חשאית. המשימה הראשונה שלהם: האם שני הסוכנים האגדיים, אך השונים כל כך, יוכלו להסכים על מה להזמין?</p>
+            </div>
+            <audio id="audio-scene-1" src="https://files.catbox.moe/6buhvk.mp3" preload="auto"></audio>
+        </div>
+
+        <!-- Page 4: Scene 2 -->
+        <div class="page" style="background-image: url('https://i.postimg.cc/gjnMhNfw/scene2.png');">
+            <div class="text-overlay">
+                <p class="story-text">משימתם הגדולה ביותר לקחה אותם לפריז למבצע ריגול בן חודשיים. רני, הדובר הצרפתי השוטף, ניווט את השטח כמו המומחה שהוא. משימתה האישית של עדה: לשרוד בארץ הבגטים והחמאה, תוך הקפדה על פרוטוקול תזונתי מחמיר.</p>
+            </div>
+            <audio id="audio-scene-2" src="https://files.catbox.moe/wux1l8.mp3" preload="auto"></audio>
+        </div>
+
+        <!-- Page 5: Scene 3 -->
+        <div class="page" style="background-image: url('https://i.postimg.cc/W3pYN28w/scene3.png');">
+             <div class="text-overlay">
+                <p class="story-text">בחזרה במטה בתל אביב, התנהלו ויכוחים אסטרטגיים יומיומיים. "פסגת המומחים", בה האגרונומית והגיאוגרף התווכחו על נושאים ברומו של עולם: מהו המסלול הנכון לטיול הבוקר? הדרך היעילה ביותר גיאוגרפית, או זו עם האנרגיה הטובה ביותר?</p>
+            </div>
+            <audio id="audio-scene-3" src="https://files.catbox.moe/bygcch.mp3" preload="auto"></audio>
+        </div>
+
+        <!-- Page 6: Scene 4 -->
+        <div class="page" style="background-image: url('https://i.postimg.cc/dtDMR98j/scene4.png');">
+            <div class="text-overlay">
+                <p class="story-text">משימתם המורכבת ביותר: ניהול שתי אימפריות. עדה, אחראית על "הזרוע האמריקאית" ו"הסניף המקומי". רני, מנהל את הדיווימיה הוותיקה והמפוארת שלו - הלא היא "זרוע אהרונסון". יחד, הם מהווים את הגשר שמחבר בין שתי השושלות.</p>
+            </div>
+            <audio id="audio-scene-4" src="https://files.catbox.moe/5s1xh6.mp3" preload="auto"></audio>
+        </div>
+
+        <!-- Page 7: Scene 5 -->
+        <div class="page" style="background-image: url('https://i.postimg.cc/CL23cf7T/scene5.png');">
+            <div class="text-overlay">
+                <p class="story-text">במקביל, הסוכן רני ממשיך במשימת חייו: "מבצע: הספר". אבל לסוכנת עדה, "קצינת המוטיבציה הראשית", יש טקטיקה חדשה. במקום לזרז אותו, היא מנסה לפתות אותו עם תוכניות למבצע הבא שלהם... טיול חדש ליעד מרגש.</p>
+            </div>
+            <audio id="audio-scene-5" src="https://files.catbox.moe/7iyxo5.mp3" preload="auto"></audio>
+        </div>
+
+        <!-- Page 8: Scene 6 -->
+        <div class="page" style="background-image: url('https://i.postimg.cc/tRBQVcVg/scene6.png');">
+            <div class="text-overlay">
+                <p class="story-text">אבל כל המשימות האלה היו רק חימום למבצע השיא. הגעה ליעדים הנועזים ביותר: יום הולדת 70 ויום הולדת 75! עדה השיגה דרגת "שלוות יוגה וחוכמת אדמה". רני השיג דרגת "גאונות פרופסורית וקסם של סבא".</p>
+            </div>
+            <audio id="audio-scene-6" src="https://files.catbox.moe/l23110.mp3" preload="auto"></audio>
+        </div>
+
+        <!-- Page 9: Scene 7 -->
+        <div class="page" style="background-image: url('https://i.postimg.cc/tJSKQ1H6/scene7.png');">
+            <div class="text-overlay">
+                <p class="story-text">אז לעדה ולרני, השותפים לדרך, המשימה הושלמה בהצלחה. בשבע השנים האלה, הראיתם לכולנו שההרפתקאות הגדולות באמת לא תלויות בגיל, שסיפור חדש יכול להתחיל כשלא מצפים לו, ושגם שני סוכנים שונים כל כך יכולים לבנות יחד חיים מדהימים - חיים שמלאים בצחוק, בחוכמה, ובוויכוח היומי החשוב על מה אוכלים לארוחת צהריים. אנחנו אוהבים אתכם ומאחלים לכם עוד שנים רבות של מבצעים משותפים. יום הולדת שמח!</p>
+            </div>
+            <audio id="audio-scene-7" src="https://files.catbox.moe/5ie5he.mp3" preload="auto"></audio>
+        </div>
+        
+        <!-- Page 10: Dedication -->
+        <div class="page greeting-card-page" id="dedication-page">
+             <div class="greeting-card-content">
+                <h2 class="font-bold">מזל טוב</h2>
+                <p class="mt-4">לרגל 7 שנים של הרפתקאות משותפות וימי הולדת 70 ו-75</p>
+                <svg class="w-24 h-8 my-4 md:my-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 101 12" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6h9.375c1.428 0 2.58-1.152 2.58-2.58V3.375c0-1.428 1.152-2.58 2.58-2.58h21.31c1.428 0 2.58 1.152 2.58 2.58v.045c0 1.428 1.152 2.58 2.58 2.58h14.55c1.428 0 2.58-1.152 2.58-2.58v-.045c0-1.428 1.152-2.58 2.58-2.58h21.31c1.428 0 2.58 1.152 2.58 2.58v.045c0 1.428 1.152 2.58 2.58 2.58H98.25" />
+                </svg>
+                <p class="text-2xl md:text-3xl" style="font-family: 'Dancing Script', cursive;">אוהבים,</p>
+                <p class="mt-2">שחר, צפריר וטל, גלעד, אמה וניב, והדר ואיציק</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slick Pagination Elements -->
+    <button id="next-page-arrow" class="nav-arrow" title="העמוד הבא">&#x276F;</button>
+    <button id="prev-page-arrow" class="nav-arrow" title="העמוד הקודם">&#x276E;</button>
+    <div id="page-indicator" class="ui-element"></div>
+
+    <!-- Floating Menu Button and Dropdown -->
+    <div class="fixed top-4 right-4 z-[100] ui-element">
+        <button id="menu-button" class="w-12 h-12 bg-gray-800 bg-opacity-30 rounded-full flex items-center justify-center text-white text-3xl hover:bg-opacity-50 transition backdrop-blur-sm">
+            &#9881;
+        </button>
+        <div id="menu-dropdown" class="hidden absolute top-14 right-0 bg-white rounded-lg shadow-xl p-2 w-56 text-right z-10">
+            <div class="p-2">
+                <div class="flex items-center justify-between">
+                    <label for="animation-toggle" class="text-gray-700 select-none cursor-pointer">אנימציית טקסט</label>
+                    <input type="checkbox" id="animation-toggle" class="h-5 w-5 rounded text-blue-500 focus:ring-0">
+                </div>
+            </div>
+            <div class="p-2">
+                <div class="flex items-center justify-between">
+                    <label for="autoplay-toggle" class="text-gray-700 select-none cursor-pointer">ניגון אוטומטי</label>
+                    <input type="checkbox" id="autoplay-toggle" class="h-5 w-5 rounded text-blue-500 focus:ring-0">
+                </div>
+            </div>
+            <div class="p-2">
+                <div class="flex items-center justify-between">
+                    <label for="narration-toggle" class="text-gray-700 select-none cursor-pointer">קריינות</label>
+                    <input type="checkbox" id="narration-toggle" class="h-5 w-5 rounded text-blue-500 focus:ring-0">
+                </div>
+            </div>
+            <div class="p-2 border-t border-gray-200 mt-2 pt-2">
+                <label for="font-size-slider" class="text-gray-700 select-none">גודל גופן</label>
+                <input type="range" id="font-size-slider" min="0.7" max="1.3" step="0.05" value="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2">
+            </div>
+            <div class="border-t border-gray-200 mt-2 pt-2">
+                <button id="restart-button" class="w-full text-right text-gray-700 hover:bg-gray-100 p-2 rounded flex items-center">
+                    <span class="text-xl ml-2">&#x21BA;</span> <!-- Restart Icon -->
+                    <span>התחלה מחדש</span>
+                </button>
+            </div>
+            <div class="border-t border-gray-200 mt-2 pt-2">
+                <button id="fullscreen-button" class="w-full text-right text-gray-700 hover:bg-gray-100 p-2 rounded flex items-center">
+                    <span id="enter-fullscreen-icon" class="text-xl ml-2">&#x26F6;</span> <!-- Fullscreen Icon -->
+                    <span id="exit-fullscreen-icon" class="text-xl ml-2 hidden">&#x2716;</span> <!-- Exit Icon -->
+                    <span id="fullscreen-text">מסך מלא</span>
+                </button>
+            </div>
+        </div>
+        <div class="absolute top-16 right-0 mt-2 space-y-2">
+            <button id="play-pause-button" class="hidden w-12 h-12 bg-gray-800 bg-opacity-30 rounded-full flex items-center justify-center text-white text-2xl hover:bg-opacity-50 transition backdrop-blur-sm">
+                <span id="play-icon">&#9654;</span>
+                <span id="pause-icon" class="hidden">&#9208;</span>
+            </button>
+            <button id="mute-button" class="hidden w-12 h-12 bg-gray-800 bg-opacity-30 rounded-full flex items-center justify-center text-white text-2xl hover:bg-opacity-50 transition backdrop-blur-sm">
+                <span id="unmute-icon">&#128266;</span>
+                <span id="mute-icon" class="hidden">&#128263;</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const prevBtn = document.getElementById('prev-page-arrow');
+        const nextBtn = document.getElementById('next-page-arrow');
+        const pageIndicator = document.getElementById('page-indicator');
+        const pages = document.querySelectorAll('.page');
+        const menuButton = document.getElementById('menu-button');
+        const menuDropdown = document.getElementById('menu-dropdown');
+        const animationToggle = document.getElementById('animation-toggle');
+        const autoPlayToggle = document.getElementById('autoplay-toggle');
+        const narrationToggle = document.getElementById('narration-toggle');
+        const playPauseBtn = document.getElementById('play-pause-button');
+        const playIcon = document.getElementById('play-icon');
+        const pauseIcon = document.getElementById('pause-icon');
+        const restartBtn = document.getElementById('restart-button');
+        const muteBtn = document.getElementById('mute-button'); 
+        const unmuteIcon = document.getElementById('unmute-icon'); 
+        const muteIcon = document.getElementById('mute-icon'); 
+        const fontSizeSlider = document.getElementById('font-size-slider');
+        const fullscreenBtn = document.getElementById('fullscreen-button');
+        const fullscreenText = document.getElementById('fullscreen-text');
+        const enterFullscreenIcon = document.getElementById('enter-fullscreen-icon');
+        const exitFullscreenIcon = document.getElementById('exit-fullscreen-icon');
+        
+        // --- State Variables ---
+        let currentPage = 0;
+        const totalPages = pages.length;
+        const originalTexts = new Map();
+        let currentTypewriterTimeout;
+        let autoPlayTimeout;
+        let animationEnabled = false;
+        let autoPlayEnabled = false;
+        let narrationEnabled = false;
+        let isPaused = false;
+        let isMuted = false; 
+        let currentAudio = null;
+
+        // --- Initialization ---
+        function initialize() {
+            document.querySelectorAll('.story-text').forEach((el, index) => {
+                originalTexts.set(index + 2, el.innerHTML);
+                el.innerHTML = originalTexts.get(index + 2);
+                el.classList.add('finished-typing');
+            });
+            pages.forEach((page, index) => {
+                page.style.zIndex = totalPages - index;
+            });
+            updatePagination();
+            setAutoPlayState(false);
+        }
+
+        // --- Audio Control ---
+        function stopAllAudio() {
+            document.querySelectorAll('audio').forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+            });
+            currentAudio = null;
+        }
+
+        function playCurrentPageAudio() {
+            stopAllAudio();
+            if (narrationEnabled && !isPaused) {
+                const audio = pages[currentPage].querySelector('audio');
+                if (audio) {
+                    currentAudio = audio;
+                    currentAudio.muted = isMuted;
+                    audio.play().catch(e => console.error("Audio play failed:", e));
+                    currentAudio.addEventListener('ended', autoTurnPage, { once: true });
+                }
+            }
+        }
+
+        // --- Core Logic ---
+        function typeWriter(element, text, i = 0) {
+            if (isPaused || !animationEnabled) return;
+            if (i < text.length) {
+                element.innerHTML += text.charAt(i);
+                currentTypewriterTimeout = setTimeout(() => typeWriter(element, text, i + 1), 75);
+            } else {
+                element.classList.add('finished-typing');
+                if (autoPlayEnabled && !narrationEnabled) {
+                    startAutoPlayTimer();
+                }
+            }
+        }
+
+        function handlePageContent() {
+            clearTimeout(currentTypewriterTimeout);
+            clearTimeout(autoPlayTimeout);
+            playCurrentPageAudio();
+
+            const textElement = pages[currentPage].querySelector('.story-text');
+            if (textElement) {
+                textElement.innerHTML = '';
+                textElement.classList.remove('finished-typing');
+                const fullText = originalTexts.get(currentPage);
+
+                if (animationEnabled && !isPaused) {
+                    typeWriter(textElement, fullText);
+                } else {
+                    textElement.innerHTML = fullText;
+                    textElement.classList.add('finished-typing');
+                    if (autoPlayEnabled && !isPaused && !narrationEnabled) startAutoPlayTimer();
+                }
+            } else if (autoPlayEnabled && !isPaused) {
+                let delay = 2500;
+                if (currentPage === 1) delay = 10000;
+                startAutoPlayTimer(delay);
+            }
+        }
+
+        function turnPage(direction) {
+            if (direction === 'next' && currentPage < totalPages - 1) {
+                pages[currentPage].classList.add('flipped');
+                currentPage++;
+            } else if (direction === 'prev' && currentPage > 0) {
+                currentPage--;
+                pages[currentPage].classList.remove('flipped');
+            }
+            handlePageContent();
+            updatePagination();
+        }
+
+        // --- Autoplay Logic ---
+        function setAutoPlayState(isPlaying) {
+            autoPlayEnabled = isPlaying;
+            autoPlayToggle.checked = isPlaying;
+            playPauseBtn.classList.toggle('hidden', !isPlaying);
+            
+            if (isPlaying) {
+                document.body.classList.add('autoplay-active');
+                isPaused = false;
+                updatePlayPauseIcon();
+                handlePageContent();
+            } else {
+                document.body.classList.remove('autoplay-active');
+                isPaused = false;
+                updatePlayPauseIcon();
+                clearTimeout(autoPlayTimeout);
+                clearTimeout(currentTypewriterTimeout);
+                if (currentAudio) currentAudio.pause();
+            }
+        }
+        
+        function autoTurnPage() {
+            if (autoPlayEnabled && !isPaused) {
+                turnPage('next');
+            }
+        }
+
+        function startAutoPlayTimer(delay = 4000) {
+            if (!autoPlayEnabled || isPaused || currentPage === totalPages - 1) {
+                if (currentPage === totalPages - 1) interruptAutoPlay(false);
+                return;
+            }
+            clearTimeout(autoPlayTimeout);
+            autoPlayTimeout = setTimeout(autoTurnPage, delay);
+        }
+
+        function interruptAutoPlay(turnOff = true) {
+            if (autoPlayEnabled) {
+                if (turnOff) {
+                    setAutoPlayState(false);
+                } else {
+                    isPaused = true;
+                    updatePlayPauseIcon();
+                    clearTimeout(autoPlayTimeout);
+                    clearTimeout(currentTypewriterTimeout);
+                    if (currentAudio) currentAudio.pause();
+                }
+            }
+        }
+
+        function restartStory() {
+            const wasAutoplaying = autoPlayEnabled;
+            interruptAutoPlay();
+            stopAllAudio();
+            
+            pages.forEach(page => page.classList.remove('flipped'));
+
+            currentPage = 0;
+            document.querySelectorAll('.story-text').forEach(el => {
+                el.innerHTML = '';
+                el.classList.remove('finished-typing');
+            });
+            updatePagination();
+            if (wasAutoplaying) {
+                setAutoPlayState(true);
+            } else {
+                handlePageContent();
+            }
+            menuDropdown.classList.add('hidden');
+        }
+
+        // --- Fullscreen Logic ---
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+        
+        function updateFullscreenButton() {
+            if (document.fullscreenElement) {
+                fullscreenText.textContent = "צא ממסך מלא";
+                enterFullscreenIcon.classList.add('hidden');
+                exitFullscreenIcon.classList.remove('hidden');
+            } else {
+                fullscreenText.textContent = "מסך מלא";
+                enterFullscreenIcon.classList.remove('hidden');
+                exitFullscreenIcon.classList.add('hidden');
+            }
+        }
+
+        // --- UI Updates ---
+        const updatePagination = () => {
+            if (currentPage === 0) {
+                pageIndicator.textContent = "פתיחה";
+            } else if (currentPage === 1) {
+                pageIndicator.textContent = "שער";
+            } else if (currentPage === totalPages - 1) {
+                pageIndicator.textContent = "הקדשה";
+            } else {
+                pageIndicator.textContent = `${currentPage - 1} / ${totalPages - 3}`;
+            }
+            prevBtn.disabled = (currentPage === 0);
+            nextBtn.disabled = (currentPage === totalPages - 1);
+        };
+        
+        const updatePlayPauseIcon = () => {
+            playIcon.classList.toggle('hidden', !isPaused);
+            pauseIcon.classList.toggle('hidden', isPaused);
+        };
+
+        const updateMuteIcon = () => { 
+            unmuteIcon.classList.toggle('hidden', isMuted);
+            muteIcon.classList.toggle('hidden', !isMuted);
+            if (currentAudio) {
+                currentAudio.muted = isMuted;
+            }
+        };
+
+        // --- Event Listeners ---
+        nextBtn.addEventListener('click', () => { interruptAutoPlay(); turnPage('next'); });
+        prevBtn.addEventListener('click', () => { interruptAutoPlay(); turnPage('prev'); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' && !nextBtn.disabled) { interruptAutoPlay(); turnPage('next'); }
+            if (e.key === 'ArrowRight' && !prevBtn.disabled) { interruptAutoPlay(); turnPage('prev'); }
+        });
+        menuButton.addEventListener('click', (e) => { e.stopPropagation(); menuDropdown.classList.toggle('hidden'); });
+        document.addEventListener('click', (e) => {
+            if (!menuDropdown.contains(e.target) && !menuButton.contains(e.target)) {
+                menuDropdown.classList.add('hidden');
+            }
+        });
+        animationToggle.addEventListener('change', () => { animationEnabled = animationToggle.checked; handlePageContent(); });
+        autoPlayToggle.addEventListener('change', () => setAutoPlayState(autoPlayToggle.checked));
+        narrationToggle.addEventListener('change', () => {
+            narrationEnabled = narrationToggle.checked;
+            muteBtn.classList.toggle('hidden', !narrationEnabled);
+            if (narrationEnabled) {
+                playCurrentPageAudio();
+            } else {
+                stopAllAudio();
+            }
+        });
+        playPauseBtn.addEventListener('click', () => {
+            isPaused = !isPaused;
+            updatePlayPauseIcon();
+            if (isPaused) {
+                clearTimeout(autoPlayTimeout);
+                clearTimeout(currentTypewriterTimeout);
+                if (currentAudio) currentAudio.pause();
+            } else {
+                if (currentAudio) currentAudio.play().catch(e => console.error("Audio resume failed:", e));
+                handlePageContent();
+            }
+        });
+        muteBtn.addEventListener('click', () => { 
+            isMuted = !isMuted;
+            updateMuteIcon();
+        });
+        restartBtn.addEventListener('click', restartStory);
+        fontSizeSlider.addEventListener('input', (e) => {
+            document.documentElement.style.setProperty('--font-scale', e.target.value);
+        });
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+
+        // --- Initial Load ---
+        initialize();
+    </script>
+
+</body>
+</html>
