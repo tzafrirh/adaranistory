@@ -387,326 +387,608 @@
     <audio id="background-music" src="https://files.catbox.moe/2rvixg.mp3" loop></audio>
 
     <script>
-        // --- DOM Elements ---
-        const prevBtn = document.getElementById('prev-page-arrow');
-        const nextBtn = document.getElementById('next-page-arrow');
-        const pageIndicator = document.getElementById('page-indicator');
-        const pages = document.querySelectorAll('.page');
-        const menuButton = document.getElementById('menu-button');
-        const menuDropdown = document.getElementById('menu-dropdown');
-        const animationToggle = document.getElementById('animation-toggle');
-        const autoPlayToggle = document.getElementById('autoplay-toggle');
-        const narrationToggle = document.getElementById('narration-toggle');
-        const playPauseBtn = document.getElementById('play-pause-button');
-        const playIcon = document.getElementById('play-icon');
-        const pauseIcon = document.getElementById('pause-icon');
-        const restartBtn = document.getElementById('restart-button');
-        const muteBtn = document.getElementById('mute-button'); 
-        const unmuteIcon = document.getElementById('unmute-icon'); 
-        const muteIcon = document.getElementById('mute-icon'); 
-        const fontSizeSlider = document.getElementById('font-size-slider');
-        const fullscreenBtn = document.getElementById('fullscreen-button');
-        const fullscreenText = document.getElementById('fullscreen-text');
-        const enterFullscreenIcon = document.getElementById('enter-fullscreen-icon');
-        const exitFullscreenIcon = document.getElementById('exit-fullscreen-icon');
-        const musicToggle = document.getElementById('music-toggle'); // New
-        const volumeSlider = document.getElementById('volume-slider'); // New
-        const backgroundMusic = document.getElementById('background-music'); // New
-        
-        // --- State Variables ---
-        let currentPage = 0;
-        const totalPages = pages.length;
-        const originalTexts = new Map();
-        let currentTypewriterTimeout;
-        let autoPlayTimeout;
-        let animationEnabled = false;
-        let autoPlayEnabled = false;
-        let narrationEnabled = false;
-        let musicEnabled = false; // New
-        let isPaused = false;
-        let isMuted = false; 
-        let currentAudio = null;
+        // --- Optimized State Management ---
+        class StoryBookApp {
+            constructor() {
+                // DOM element cache
+                this.elements = this.cacheElements();
+                
+                // Application state
+                this.state = {
+                    currentPage: 0,
+                    totalPages: this.elements.pages.length,
+                    animationEnabled: false,
+                    autoPlayEnabled: false,
+                    narrationEnabled: false,
+                    musicEnabled: false,
+                    isPaused: false,
+                    isMuted: false,
+                    currentAudio: null,
+                    originalTexts: new Map()
+                };
+                
+                // Timeout references for cleanup
+                this.timeouts = {
+                    typewriter: null,
+                    autoPlay: null
+                };
+                
+                // Constants
+                this.constants = {
+                    TYPEWRITER_DELAY: 75,
+                    AUTO_PLAY_DELAY: 4000,
+                    HEADER_PAGE_DELAY: 10000,
+                    DEFAULT_PAGE_DELAY: 2500,
+                    DEBOUNCE_DELAY: 250
+                };
+                
+                // Bound methods for event listeners
+                this.boundMethods = {
+                    handleKeydown: this.debounce(this.handleKeydown.bind(this), this.constants.DEBOUNCE_DELAY),
+                    handleDocumentClick: this.handleDocumentClick.bind(this),
+                    handleFullscreenChange: this.handleFullscreenChange.bind(this),
+                    handleVolumeChange: this.debounce(this.handleVolumeChange.bind(this), 100),
+                    handleFontSizeChange: this.debounce(this.handleFontSizeChange.bind(this), 100)
+                };
+            }
+            
+            // Cache all DOM elements once
+            cacheElements() {
+                const elements = {};
+                
+                // Navigation elements
+                elements.prevBtn = document.getElementById('prev-page-arrow');
+                elements.nextBtn = document.getElementById('next-page-arrow');
+                elements.pageIndicator = document.getElementById('page-indicator');
+                elements.pages = document.querySelectorAll('.page');
+                
+                // Menu elements
+                elements.menuButton = document.getElementById('menu-button');
+                elements.menuDropdown = document.getElementById('menu-dropdown');
+                
+                // Control toggles
+                elements.animationToggle = document.getElementById('animation-toggle');
+                elements.autoPlayToggle = document.getElementById('autoplay-toggle');
+                elements.narrationToggle = document.getElementById('narration-toggle');
+                elements.musicToggle = document.getElementById('music-toggle');
+                
+                // Media controls
+                elements.playPauseBtn = document.getElementById('play-pause-button');
+                elements.playIcon = document.getElementById('play-icon');
+                elements.pauseIcon = document.getElementById('pause-icon');
+                elements.muteBtn = document.getElementById('mute-button');
+                elements.unmuteIcon = document.getElementById('unmute-icon');
+                elements.muteIcon = document.getElementById('mute-icon');
+                
+                // Other controls
+                elements.restartBtn = document.getElementById('restart-button');
+                elements.fontSizeSlider = document.getElementById('font-size-slider');
+                elements.volumeSlider = document.getElementById('volume-slider');
+                
+                // Fullscreen elements
+                elements.fullscreenBtn = document.getElementById('fullscreen-button');
+                elements.fullscreenText = document.getElementById('fullscreen-text');
+                elements.enterFullscreenIcon = document.getElementById('enter-fullscreen-icon');
+                elements.exitFullscreenIcon = document.getElementById('exit-fullscreen-icon');
+                
+                // Audio elements
+                elements.backgroundMusic = document.getElementById('background-music');
+                elements.storyTextElements = document.querySelectorAll('.story-text');
+                
+                return elements;
+            }
+            
+            // Utility: Debounce function for performance optimization
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+            
+            // Utility: Error handling wrapper
+            safeExecute(func, fallback = () => {}) {
+                try {
+                    return func();
+                } catch (error) {
+                    console.error('StoryBook Error:', error);
+                    return fallback();
+                }
+            }
+            
+            // Utility: Clean up timeouts
+            clearAllTimeouts() {
+                Object.values(this.timeouts).forEach(timeout => {
+                    if (timeout) clearTimeout(timeout);
+                });
+                this.timeouts.typewriter = null;
+                this.timeouts.autoPlay = null;
+            }
 
         // --- Initialization ---
-        function initialize() {
-            document.querySelectorAll('.story-text').forEach((el, index) => {
-                originalTexts.set(index + 2, el.innerHTML);
-                el.innerHTML = originalTexts.get(index + 2);
+            initialize() {
+                this.safeExecute(() => {
+                    // Store original text content
+                    this.elements.storyTextElements.forEach((el, index) => {
+                        this.state.originalTexts.set(index + 2, el.innerHTML);
+                        el.innerHTML = this.state.originalTexts.get(index + 2);
                 el.classList.add('finished-typing');
             });
-            pages.forEach((page, index) => {
-                page.style.zIndex = totalPages - index;
-            });
-            updatePagination();
-            setAutoPlayState(false);
-            setMusicState(false);
-        }
+                    
+                    // Set up page z-index for stacking
+                    this.elements.pages.forEach((page, index) => {
+                        page.style.zIndex = this.state.totalPages - index;
+                    });
+                    
+                    // Initialize UI
+                    this.updatePagination();
+                    this.setAutoPlayState(false);
+                    this.setMusicState(false);
+                    this.attachEventListeners();
+                    
+                    // Add keyboard navigation hints
+                    this.addAccessibilitySupport();
+                });
+            }
 
-        // --- Audio Control ---
-        function stopAllAudio() {
-            document.querySelectorAll('audio').forEach(audio => {
-                if (audio.id !== 'background-music') {
+            // Add accessibility support
+            addAccessibilitySupport() {
+                // Add ARIA labels
+                this.elements.prevBtn.setAttribute('aria-label', 'Previous page');
+                this.elements.nextBtn.setAttribute('aria-label', 'Next page');
+                this.elements.playPauseBtn.setAttribute('aria-label', 'Play/Pause');
+                this.elements.muteBtn.setAttribute('aria-label', 'Mute/Unmute');
+                
+                // Add role attributes
+                this.elements.pageIndicator.setAttribute('role', 'status');
+                this.elements.pageIndicator.setAttribute('aria-live', 'polite');
+                
+                // Focus management
+                this.elements.pages.forEach(page => {
+                    page.setAttribute('tabindex', '-1');
+                });
+            }
+            
+            // --- Optimized Audio Control ---
+            stopAllAudio() {
+                return this.safeExecute(() => {
+                    const audioElements = document.querySelectorAll('audio:not(#background-music)');
+                    audioElements.forEach(audio => {
                     audio.pause();
                     audio.currentTime = 0;
-                }
-            });
-            currentAudio = null;
-        }
-
-        function playCurrentPageAudio() {
-            stopAllAudio();
-            if (narrationEnabled && !isPaused) {
-                const audio = pages[currentPage].querySelector('audio');
-                if (audio) {
-                    currentAudio = audio;
-                    currentAudio.muted = isMuted;
-                    audio.play().catch(e => console.error("Audio play failed:", e));
-                    currentAudio.addEventListener('ended', autoTurnPage, { once: true });
-                }
+                    });
+                    this.state.currentAudio = null;
+                });
             }
-        }
 
-        // --- Core Logic ---
-        function typeWriter(element, text, i = 0) {
-            if (isPaused || !animationEnabled) return;
+            playCurrentPageAudio() {
+                return this.safeExecute(() => {
+                    this.stopAllAudio();
+                    
+                    if (!this.state.narrationEnabled || this.state.isPaused) {
+                        return;
+                    }
+                    
+                    const audio = this.elements.pages[this.state.currentPage]?.querySelector('audio');
+                    if (!audio) return;
+                    
+                    this.state.currentAudio = audio;
+                    this.state.currentAudio.muted = this.state.isMuted;
+                    
+                    const playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise
+                            .then(() => {
+                                // Audio started successfully
+                                this.state.currentAudio.addEventListener('ended', () => this.autoTurnPage(), { once: true });
+                            })
+                            .catch(error => {
+                                console.warn("Audio autoplay blocked or failed:", error);
+                            });
+                    }
+                });
+            }
+
+            // --- Optimized Core Logic ---
+            typeWriter(element, text, i = 0) {
+                if (this.state.isPaused || !this.state.animationEnabled) return;
+                
             if (i < text.length) {
                 element.innerHTML += text.charAt(i);
-                currentTypewriterTimeout = setTimeout(() => typeWriter(element, text, i + 1), 75);
+                    this.timeouts.typewriter = setTimeout(() => {
+                        this.typeWriter(element, text, i + 1);
+                    }, this.constants.TYPEWRITER_DELAY);
             } else {
                 element.classList.add('finished-typing');
-                if (autoPlayEnabled && !narrationEnabled) {
-                    startAutoPlayTimer();
+                    if (this.state.autoPlayEnabled && !this.state.narrationEnabled) {
+                        this.startAutoPlayTimer();
+                    }
                 }
             }
-        }
 
-        function handlePageContent() {
-            clearTimeout(currentTypewriterTimeout);
-            clearTimeout(autoPlayTimeout);
-            playCurrentPageAudio();
+            handlePageContent() {
+                return this.safeExecute(() => {
+                    this.clearAllTimeouts();
+                    this.playCurrentPageAudio();
 
-            const textElement = pages[currentPage].querySelector('.story-text');
+                    const textElement = this.elements.pages[this.state.currentPage]?.querySelector('.story-text');
+                    
             if (textElement) {
                 textElement.innerHTML = '';
                 textElement.classList.remove('finished-typing');
-                const fullText = originalTexts.get(currentPage);
+                        const fullText = this.state.originalTexts.get(this.state.currentPage);
 
-                if (animationEnabled && !isPaused) {
-                    typeWriter(textElement, fullText);
-                } else {
+                        if (this.state.animationEnabled && !this.state.isPaused && fullText) {
+                            this.typeWriter(textElement, fullText);
+                        } else if (fullText) {
                     textElement.innerHTML = fullText;
                     textElement.classList.add('finished-typing');
-                    if (autoPlayEnabled && !isPaused && !narrationEnabled) startAutoPlayTimer();
-                }
-            } else if (autoPlayEnabled && !isPaused) {
-                let delay = 2500;
-                if (currentPage === 1) delay = 10000;
-                startAutoPlayTimer(delay);
+                            if (this.state.autoPlayEnabled && !this.state.isPaused && !this.state.narrationEnabled) {
+                                this.startAutoPlayTimer();
+                            }
+                        }
+                    } else if (this.state.autoPlayEnabled && !this.state.isPaused) {
+                        const delay = this.state.currentPage === 1 ? 
+                            this.constants.HEADER_PAGE_DELAY : 
+                            this.constants.DEFAULT_PAGE_DELAY;
+                        this.startAutoPlayTimer(delay);
+                    }
+                });
             }
-        }
 
-        function turnPage(direction) {
-            if (direction === 'next' && currentPage < totalPages - 1) {
-                pages[currentPage].classList.add('flipped');
-                currentPage++;
-            } else if (direction === 'prev' && currentPage > 0) {
-                currentPage--;
-                pages[currentPage].classList.remove('flipped');
+            turnPage(direction) {
+                return this.safeExecute(() => {
+                    if (direction === 'next' && this.state.currentPage < this.state.totalPages - 1) {
+                        this.elements.pages[this.state.currentPage].classList.add('flipped');
+                        this.state.currentPage++;
+                    } else if (direction === 'prev' && this.state.currentPage > 0) {
+                        this.state.currentPage--;
+                        this.elements.pages[this.state.currentPage].classList.remove('flipped');
+                    }
+                    
+                    this.handlePageContent();
+                    this.updatePagination();
+                    
+                    // Focus management for accessibility
+                    this.elements.pages[this.state.currentPage].focus();
+                });
             }
-            handlePageContent();
-            updatePagination();
-        }
 
-        // --- Autoplay Logic ---
-        function setAutoPlayState(isPlaying) {
-            autoPlayEnabled = isPlaying;
-            autoPlayToggle.checked = isPlaying;
-            playPauseBtn.classList.toggle('hidden', !isPlaying);
+            // --- Optimized Autoplay Logic ---
+            setAutoPlayState(isPlaying) {
+                return this.safeExecute(() => {
+                    this.state.autoPlayEnabled = isPlaying;
+                    this.elements.autoPlayToggle.checked = isPlaying;
+                    this.elements.playPauseBtn.classList.toggle('hidden', !isPlaying);
             
             if (isPlaying) {
                 document.body.classList.add('autoplay-active');
-                isPaused = false;
-                updatePlayPauseIcon();
-                handlePageContent();
+                        this.state.isPaused = false;
+                        this.updatePlayPauseIcon();
+                        this.handlePageContent();
             } else {
                 document.body.classList.remove('autoplay-active');
-                isPaused = false;
-                updatePlayPauseIcon();
-                clearTimeout(autoPlayTimeout);
-                clearTimeout(currentTypewriterTimeout);
-                if (currentAudio) currentAudio.pause();
-            }
-        }
-        
-        function autoTurnPage() {
-            if (autoPlayEnabled && !isPaused) {
-                turnPage('next');
-            }
-        }
-
-        function startAutoPlayTimer(delay = 4000) {
-            if (!autoPlayEnabled || isPaused || currentPage === totalPages - 1) {
-                if (currentPage === totalPages - 1) interruptAutoPlay(false);
-                return;
-            }
-            clearTimeout(autoPlayTimeout);
-            autoPlayTimeout = setTimeout(autoTurnPage, delay);
-        }
-
-        function interruptAutoPlay(turnOff = true) {
-            if (autoPlayEnabled) {
-                if (turnOff) {
-                    setAutoPlayState(false);
-                } else {
-                    isPaused = true;
-                    updatePlayPauseIcon();
-                    clearTimeout(autoPlayTimeout);
-                    clearTimeout(currentTypewriterTimeout);
-                    if (currentAudio) currentAudio.pause();
-                }
-            }
-        }
-
-        function restartStory() {
-            const wasAutoplaying = autoPlayEnabled;
-            interruptAutoPlay();
-            stopAllAudio();
-            
-            pages.forEach(page => page.classList.remove('flipped'));
-
-            currentPage = 0;
-            document.querySelectorAll('.story-text').forEach(el => {
-                el.innerHTML = '';
-                el.classList.remove('finished-typing');
-            });
-            updatePagination();
-            if (wasAutoplaying) {
-                setAutoPlayState(true);
-            } else {
-                handlePageContent();
-            }
-            menuDropdown.classList.add('hidden');
-        }
-
-        // --- Fullscreen Logic ---
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                        this.state.isPaused = false;
+                        this.updatePlayPauseIcon();
+                        this.clearAllTimeouts();
+                        if (this.state.currentAudio) {
+                            this.state.currentAudio.pause();
+                        }
+                    }
                 });
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
+            }
+            
+            autoTurnPage() {
+                if (this.state.autoPlayEnabled && !this.state.isPaused && 
+                    this.state.currentPage < this.state.totalPages - 1) {
+                    this.turnPage('next');
                 }
             }
+
+            startAutoPlayTimer(delay = this.constants.AUTO_PLAY_DELAY) {
+                if (!this.state.autoPlayEnabled || this.state.isPaused) {
+                    return;
+                }
+                
+                // Don't set a timer if we're already on the last page
+                if (this.state.currentPage === this.state.totalPages - 1) {
+                    return;
+                }
+                
+                this.clearAllTimeouts();
+                this.timeouts.autoPlay = setTimeout(() => this.autoTurnPage(), delay);
+        }
+
+            interruptAutoPlay(turnOff = true) {
+                if (this.state.autoPlayEnabled) {
+                    if (turnOff) {
+                        this.setAutoPlayState(false);
+                    } else {
+                        this.state.isPaused = true;
+                        this.updatePlayPauseIcon();
+                        this.clearAllTimeouts();
+                        if (this.state.currentAudio) {
+                            this.state.currentAudio.pause();
+                        }
+                    }
+                }
+            }
+
+            restartStory() {
+                return this.safeExecute(() => {
+                    const wasAutoplaying = this.state.autoPlayEnabled;
+                    this.interruptAutoPlay();
+                    this.stopAllAudio();
+                    
+                    // Reset page states
+                    this.elements.pages.forEach(page => page.classList.remove('flipped'));
+
+                    this.state.currentPage = 0;
+                    this.elements.storyTextElements.forEach(el => {
+                        el.innerHTML = '';
+                        el.classList.remove('finished-typing');
+                    });
+                    
+                    this.updatePagination();
+                    
+                    if (wasAutoplaying) {
+                        this.setAutoPlayState(true);
+                    } else {
+                        this.handlePageContent();
+                    }
+                    
+                    this.elements.menuDropdown.classList.add('hidden');
+                });
+            }
+
+            // --- Optimized Fullscreen Logic ---
+            toggleFullscreen() {
+                return this.safeExecute(() => {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen()
+                            .catch(err => {
+                                console.warn(`Fullscreen failed: ${err.message}`);
+                                // User-friendly notification instead of alert
+                                this.showNotification('Fullscreen mode not available');
+                            });
+                    } else {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                        }
+                    }
+                });
+            }
+            
+            // --- UI Update Methods ---
+            updatePagination() {
+                return this.safeExecute(() => {
+                    const pageNames = {
+                        0: "פתיחה",
+                        1: "שער", 
+                        [this.state.totalPages - 1]: "הקדשה"
+                    };
+                    
+                    this.elements.pageIndicator.textContent = pageNames[this.state.currentPage] || 
+                        `${this.state.currentPage - 1} / ${this.state.totalPages - 3}`;
+                    
+                    this.elements.prevBtn.disabled = (this.state.currentPage === 0);
+                    this.elements.nextBtn.disabled = (this.state.currentPage === this.state.totalPages - 1);
+                });
+            }
+            
+            updatePlayPauseIcon() {
+                this.elements.playIcon.classList.toggle('hidden', !this.state.isPaused);
+                this.elements.pauseIcon.classList.toggle('hidden', this.state.isPaused);
+            }
+
+            updateMuteIcon() { 
+                this.elements.unmuteIcon.classList.toggle('hidden', this.state.isMuted);
+                this.elements.muteIcon.classList.toggle('hidden', !this.state.isMuted);
+                if (this.state.currentAudio) {
+                    this.state.currentAudio.muted = this.state.isMuted;
+                }
+            }
+            
+            updateFullscreenButton() {
+                if (document.fullscreenElement) {
+                    this.elements.fullscreenText.textContent = "צא ממסך מלא";
+                    this.elements.enterFullscreenIcon.classList.add('hidden');
+                    this.elements.exitFullscreenIcon.classList.remove('hidden');
+                } else {
+                    this.elements.fullscreenText.textContent = "מסך מלא";
+                    this.elements.enterFullscreenIcon.classList.remove('hidden');
+                    this.elements.exitFullscreenIcon.classList.add('hidden');
+                }
+            }
+            
+            // Utility: Show user notification
+            showNotification(message, duration = 3000) {
+                const notification = document.createElement('div');
+                notification.textContent = message;
+                notification.style.cssText = `
+                    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+                    background: rgba(0,0,0,0.8); color: white; padding: 10px 20px;
+                    border-radius: 5px; z-index: 1000; font-size: 14px;
+                `;
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), duration);
+            }
+
+            // --- Optimized Music Control ---
+            setMusicState(isPlaying) {
+                return this.safeExecute(() => {
+                    this.state.musicEnabled = isPlaying;
+                    this.elements.musicToggle.checked = isPlaying;
+                    
+                    if (isPlaying) {
+                        this.elements.backgroundMusic.play()
+                            .catch(e => console.warn("Music autoplay blocked:", e));
+                    } else {
+                        this.elements.backgroundMusic.pause();
+                    }
+                });
+            }
+            
+            // --- Optimized Event Handlers ---
+            handleKeydown(e) {
+                switch(e.key) {
+                    case 'ArrowLeft':
+                        if (!this.elements.nextBtn.disabled) {
+                            this.interruptAutoPlay();
+                            this.turnPage('next');
+                        }
+                        break;
+                    case 'ArrowRight':
+                        if (!this.elements.prevBtn.disabled) {
+                            this.interruptAutoPlay();
+                            this.turnPage('prev');
+                        }
+                        break;
+                    case ' ':
+                    case 'Spacebar':
+                        e.preventDefault();
+                        if (this.state.autoPlayEnabled) {
+                            this.togglePlayPause();
+                        }
+                        break;
+                    case 'Escape':
+                        if (document.fullscreenElement) {
+                            this.toggleFullscreen();
+                        }
+                        this.elements.menuDropdown.classList.add('hidden');
+                        break;
+                }
+            }
+            
+            handleDocumentClick(e) {
+                if (!this.elements.menuDropdown.contains(e.target) && 
+                    !this.elements.menuButton.contains(e.target)) {
+                    this.elements.menuDropdown.classList.add('hidden');
+                }
+            }
+            
+            handleFullscreenChange() {
+                this.updateFullscreenButton();
+            }
+            
+            handleVolumeChange(e) {
+                this.elements.backgroundMusic.volume = e.target.value;
+            }
+            
+            handleFontSizeChange(e) {
+                document.documentElement.style.setProperty('--font-scale', e.target.value);
+            }
+            
+            togglePlayPause() {
+                this.state.isPaused = !this.state.isPaused;
+                this.updatePlayPauseIcon();
+                
+                if (this.state.isPaused) {
+                    this.clearAllTimeouts();
+                    if (this.state.currentAudio) this.state.currentAudio.pause();
+                    if (this.state.musicEnabled) this.elements.backgroundMusic.pause();
+                } else {
+                    if (this.state.currentAudio) {
+                        this.state.currentAudio.play().catch(e => console.warn("Audio resume failed:", e));
+                    }
+                    if (this.state.musicEnabled) {
+                        this.elements.backgroundMusic.play().catch(e => console.warn("Music resume failed:", e));
+                    }
+                    this.handlePageContent();
+                }
+            }
+            
+            // --- Event Listener Attachment ---
+            attachEventListeners() {
+                // Navigation listeners
+                this.elements.nextBtn.addEventListener('click', () => {
+                    this.interruptAutoPlay();
+                    this.turnPage('next');
+                });
+                
+                this.elements.prevBtn.addEventListener('click', () => {
+                    this.interruptAutoPlay();
+                    this.turnPage('prev');
+                });
+                
+                // Keyboard listeners
+                document.addEventListener('keydown', this.boundMethods.handleKeydown);
+                
+                // Menu listeners
+                this.elements.menuButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.elements.menuDropdown.classList.toggle('hidden');
+                });
+                
+                document.addEventListener('click', this.boundMethods.handleDocumentClick);
+                
+                // Control listeners
+                this.elements.animationToggle.addEventListener('change', () => {
+                    this.state.animationEnabled = this.elements.animationToggle.checked;
+                    this.handlePageContent();
+                });
+                
+                this.elements.autoPlayToggle.addEventListener('change', () => {
+                    this.setAutoPlayState(this.elements.autoPlayToggle.checked);
+                });
+                
+                this.elements.narrationToggle.addEventListener('change', () => {
+                    this.state.narrationEnabled = this.elements.narrationToggle.checked;
+                    this.elements.muteBtn.classList.toggle('hidden', !this.state.narrationEnabled);
+                    
+                    if (this.state.narrationEnabled) {
+                        this.playCurrentPageAudio();
+                    } else {
+                        this.stopAllAudio();
+                    }
+                });
+                
+                this.elements.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
+                
+                this.elements.muteBtn.addEventListener('click', () => {
+                    this.state.isMuted = !this.state.isMuted;
+                    this.updateMuteIcon();
+                });
+                
+                this.elements.restartBtn.addEventListener('click', () => this.restartStory());
+                
+                this.elements.fontSizeSlider.addEventListener('input', this.boundMethods.handleFontSizeChange);
+                
+                this.elements.fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
+                
+                document.addEventListener('fullscreenchange', this.boundMethods.handleFullscreenChange);
+                
+                // Music listeners
+                this.elements.musicToggle.addEventListener('change', () => {
+                    this.setMusicState(this.elements.musicToggle.checked);
+                });
+                
+                this.elements.volumeSlider.addEventListener('input', this.boundMethods.handleVolumeChange);
+            }
+            
+            // Cleanup method for memory management
+            destroy() {
+                this.clearAllTimeouts();
+                if (this.state.currentAudio) {
+                    this.state.currentAudio.pause();
+                }
+                this.elements.backgroundMusic.pause();
+                
+                // Remove event listeners
+                document.removeEventListener('keydown', this.boundMethods.handleKeydown);
+                document.removeEventListener('click', this.boundMethods.handleDocumentClick);
+                document.removeEventListener('fullscreenchange', this.boundMethods.handleFullscreenChange);
+            }
         }
         
-        function updateFullscreenButton() {
-            if (document.fullscreenElement) {
-                fullscreenText.textContent = "צא ממסך מלא";
-                enterFullscreenIcon.classList.add('hidden');
-                exitFullscreenIcon.classList.remove('hidden');
-            } else {
-                fullscreenText.textContent = "מסך מלא";
-                enterFullscreenIcon.classList.remove('hidden');
-                exitFullscreenIcon.classList.add('hidden');
-            }
-        }
-
-        // --- UI Updates ---
-        const updatePagination = () => {
-            if (currentPage === 0) {
-                pageIndicator.textContent = "פתיחה";
-            } else if (currentPage === 1) {
-                pageIndicator.textContent = "שער";
-            } else if (currentPage === totalPages - 1) {
-                pageIndicator.textContent = "הקדשה";
-            } else {
-                pageIndicator.textContent = `${currentPage - 1} / ${totalPages - 3}`;
-            }
-            prevBtn.disabled = (currentPage === 0);
-            nextBtn.disabled = (currentPage === totalPages - 1);
-        };
-        
-        const updatePlayPauseIcon = () => {
-            playIcon.classList.toggle('hidden', !isPaused);
-            pauseIcon.classList.toggle('hidden', isPaused);
-        };
-
-        const updateMuteIcon = () => { 
-            unmuteIcon.classList.toggle('hidden', isMuted);
-            muteIcon.classList.toggle('hidden', !isMuted);
-            if (currentAudio) {
-                currentAudio.muted = isMuted;
-            }
-        };
-
-        // --- Event Listeners ---
-        nextBtn.addEventListener('click', () => { interruptAutoPlay(); turnPage('next'); });
-        prevBtn.addEventListener('click', () => { interruptAutoPlay(); turnPage('prev'); });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft' && !nextBtn.disabled) { interruptAutoPlay(); turnPage('next'); }
-            if (e.key === 'ArrowRight' && !prevBtn.disabled) { interruptAutoPlay(); turnPage('prev'); }
-        });
-        menuButton.addEventListener('click', (e) => { e.stopPropagation(); menuDropdown.classList.toggle('hidden'); });
-        document.addEventListener('click', (e) => {
-            if (!menuDropdown.contains(e.target) && !menuButton.contains(e.target)) {
-                menuDropdown.classList.add('hidden');
-            }
-        });
-        animationToggle.addEventListener('change', () => { animationEnabled = animationToggle.checked; handlePageContent(); });
-        autoPlayToggle.addEventListener('change', () => setAutoPlayState(autoPlayToggle.checked));
-        narrationToggle.addEventListener('change', () => {
-            narrationEnabled = narrationToggle.checked;
-            muteBtn.classList.toggle('hidden', !narrationEnabled);
-            if (narrationEnabled) {
-                playCurrentPageAudio();
-            } else {
-                stopAllAudio();
-            }
-        });
-        playPauseBtn.addEventListener('click', () => {
-            isPaused = !isPaused;
-            updatePlayPauseIcon();
-            if (isPaused) {
-                clearTimeout(autoPlayTimeout);
-                clearTimeout(currentTypewriterTimeout);
-                if (currentAudio) currentAudio.pause();
-                if (musicEnabled) backgroundMusic.pause();
-            } else {
-                if (currentAudio) currentAudio.play().catch(e => console.error("Audio resume failed:", e));
-                if (musicEnabled) backgroundMusic.play().catch(e => console.error("Music resume failed:", e));
-                handlePageContent();
-            }
-        });
-        muteBtn.addEventListener('click', () => { 
-            isMuted = !isMuted;
-            updateMuteIcon();
-        });
-        restartBtn.addEventListener('click', restartStory);
-        fontSizeSlider.addEventListener('input', (e) => {
-            document.documentElement.style.setProperty('--font-scale', e.target.value);
-        });
-        fullscreenBtn.addEventListener('click', toggleFullscreen);
-        document.addEventListener('fullscreenchange', updateFullscreenButton);
-
-        // New Music Listeners
-        function setMusicState(isPlaying) {
-            musicEnabled = isPlaying;
-            musicToggle.checked = isPlaying;
-            if (isPlaying) {
-                backgroundMusic.play().catch(e => console.error("Music play failed:", e));
-            } else {
-                backgroundMusic.pause();
-            }
-        }
-        musicToggle.addEventListener('change', () => setMusicState(musicToggle.checked));
-        volumeSlider.addEventListener('input', (e) => {
-            backgroundMusic.volume = e.target.value;
-        });
-
-        // --- Initial Load ---
-        initialize();
+        // --- Application Initialization ---
+        const storyBook = new StoryBookApp();
+        storyBook.initialize();
     </script>
 
 </body>
