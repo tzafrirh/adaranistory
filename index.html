@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="googlebot" content="noindex,nofollow">
     <title>הסיפור של עדה ורני</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="https://i.postimg.cc/nrg3GqJ3/base.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://i.postimg.cc/nrg3GqJ3/base.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://i.postimg.cc/nrg3GqJ3/base.png">
+    <link rel="shortcut icon" href="https://i.postimg.cc/nrg3GqJ3/base.png">
     
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,6 +20,29 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&family=Dancing+Script:wght@700&family=Playpen+Sans+Hebrew:wght@700&display=swap" rel="stylesheet">
+    
+    <!-- Preload critical audio files -->
+    <link rel="preload" href="https://files.catbox.moe/9546ir.mp3" as="audio" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/bt2wil.mp3" as="audio" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/77r59z.mp3" as="audio" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/rx0836.mp3" as="audio" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/5c0fpb.mp3" as="audio" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/3jbzlc.mp3" as="audio" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/lhbk5p.mp3" as="audio" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/0xk7f6.mp3" as="audio" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/3qehbo.mp3" as="audio" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/2rvixg.mp3" as="audio" type="audio/mpeg">
+    
+    <!-- Preload critical images -->
+    <link rel="preload" href="https://i.postimg.cc/nrg3GqJ3/base.png" as="image" type="image/png">
+    <link rel="preload" href="https://i.postimg.cc/26Hc3PXR/scene1.png" as="image" type="image/png">
+    <link rel="preload" href="https://i.postimg.cc/gjnMhNfw/scene2.png" as="image" type="image/png">
+    <link rel="preload" href="https://i.postimg.cc/W3pYN28w/scene3.png" as="image" type="image/png">
+    <link rel="preload" href="https://i.postimg.cc/15WKTxkq/scene4-new.png" as="image" type="image/png">
+    <link rel="preload" href="https://i.postimg.cc/HxqmGwXQ/scene5.png" as="image" type="image/png">
+    <link rel="preload" href="https://i.postimg.cc/CL23cf7T/scene6.png" as="image" type="image/png">
+    <link rel="preload" href="https://i.postimg.cc/tRBQVcVg/scene7.png" as="image" type="image/png">
+    <link rel="preload" href="https://i.postimg.cc/tJSKQ1H6/scene8.png" as="image" type="image/png">
     
     <style>
         /* Applying the M PLUS Rounded 1c font to the whole page */
@@ -80,17 +111,21 @@
             transition: all 0.3s ease;
             user-select: none;
         }
+
         .nav-arrow:hover:not(:disabled) {
             background-color: rgba(0, 0, 0, 0.6);
             transform: translateY(-50%) scale(1.1);
         }
+
         .nav-arrow:disabled {
             opacity: 0.2;
             cursor: not-allowed;
         }
+
         #next-page-arrow {
             left: 20px;
         }
+
         #prev-page-arrow {
             right: 20px;
         }
@@ -108,6 +143,34 @@
             font-weight: 600;
             z-index: 50;
             transition: opacity 0.3s ease;
+        }
+        
+        #countdown-timer {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            width: 48px;
+            height: 48px;
+            background-color: rgba(55, 65, 81, 0.3);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.9rem;
+            font-weight: 600;
+            z-index: 50;
+            transition: all 0.3s ease;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        
+        #countdown-timer.active {
+            display: flex;
+        }
+        
+        #countdown-timer:hover {
+            background-color: rgba(55, 65, 81, 0.5);
+            transform: scale(1.05);
         }
         
         /* Styling for the text overlay */
@@ -161,10 +224,12 @@
         .ui-element {
             transition: opacity 0.4s ease-in-out;
         }
+
         body.autoplay-active .ui-element {
             opacity: 0;
             pointer-events: none;
         }
+
         body.autoplay-active:hover .ui-element {
             opacity: 1;
             pointer-events: auto;
@@ -183,6 +248,7 @@
             padding: 0;
             color: #4B5563; /* text-gray-600 */
         }
+
         .greeting-card-content {
             border: 1px solid #dcd1c0;
             box-shadow: inset 0 0 0 4px #f5eeda;
@@ -196,14 +262,17 @@
             justify-content: center;
             text-align: center;
         }
+
         .greeting-card-content h2 {
             font-family: 'Dancing Script', cursive;
             color: #1F2937; /* text-gray-800 */
             font-size: calc(3.75rem * var(--font-scale, 1));
         }
+
         .greeting-card-content p {
             font-size: calc(1.5rem * var(--font-scale, 1));
         }
+        
         @media (min-width: 768px) {
              .greeting-card-content h2 {
                 font-size: calc(6rem * var(--font-scale, 1));
@@ -216,6 +285,7 @@
         #front-cover-content h2 {
             font-size: calc(4.5rem * var(--font-scale, 1));
         }
+        
         @media (min-width: 768px) {
             #front-cover-content h2 {
                 font-size: calc(7rem * var(--font-scale, 1));
@@ -229,13 +299,13 @@
     <div class="book">
         <!-- Front Page -->
         <div class="page greeting-card-page">
-             <div id="front-cover-content" class="greeting-card-content">
+            <div id="front-cover-content" class="greeting-card-content">
                 <h2 class="font-bold" style="font-family: 'Playpen Sans Hebrew', cursive;">שעת סיפור</h2>
-             </div>
+            </div>
         </div>
 
         <!-- Page 2: Header Section -->
-        <div class="page" style="background-image: url('https://i.postimg.cc/nrg3GqJ3/base.png');">
+        <div class="page bg-[url('https://i.postimg.cc/nrg3GqJ3/base.png')]">
             <div class="text-overlay">
                 <h1 class="font-bold">משימה: 7-7-0-7-5</h1>
                 <p class="mt-3">התיק הסודי של עדה ורני</p>
@@ -244,64 +314,72 @@
         </div>
 
         <!-- Page 3: Scene 1 -->
-        <div class="page" style="background-image: url('https://i.postimg.cc/26Hc3PXR/scene1.png');">
+        <div class="page bg-[url('https://i.postimg.cc/26Hc3PXR/scene1.png')]">
             <div class="text-overlay">
                 <p class="story-text">במשך שנים, שניים מהסוכנים המבריקים ביותר של האקדמיה פעלו באותו המטה - האוניברסיטה העברית. סוכנת אחת, עדה, מומחית למודיעין חקלאי וגמישות אנושית. הסוכן השני, רני, אגדה בתחום הגיאוגרפיה, ההיסטוריה, וניתוח שטח. אך דרכיהם מעולם לא הצטלבו, עד לפני שבע שנים, בפגישת ריגול חשאית. המשימה הראשונה שלהם: האם שני הסוכנים האגדיים, אך השונים כל כך, יוכלו להסכים על מה להזמין?</p>
             </div>
-            <audio id="audio-scene-1" src="https://files.catbox.moe/5sc7wy.mp3" preload="auto"></audio>
+            <audio id="audio-scene-1" src="https://files.catbox.moe/9546ir.mp3" preload="auto"></audio>
         </div>
 
         <!-- Page 4: Scene 2 -->
-        <div class="page" style="background-image: url('https://i.postimg.cc/gjnMhNfw/scene2.png');">
+        <div class="page bg-[url('https://i.postimg.cc/gjnMhNfw/scene2.png')]">
             <div class="text-overlay">
                 <p class="story-text">משימתם הגדולה ביותר לקחה אותם לפריז למבצע ריגול בן חודשיים. רני, הדובר צרפתית שוטף, ניווט את השטח כמו המומחה שהוא. משימתה האישית של עדה: לשרוד בארץ הבגטים והחמאה, תוך הקפדה על פרוטוקול תזונתי מחמיר.</p>
             </div>
-            <audio id="audio-scene-2" src="https://files.catbox.moe/csqqs2.mp3" preload="auto"></audio>
+            <audio id="audio-scene-2" src="https://files.catbox.moe/bt2wil.mp3" preload="auto"></audio>
         </div>
 
         <!-- Page 5: Scene 3 -->
-        <div class="page" style="background-image: url('https://i.postimg.cc/W3pYN28w/scene3.png');">
-             <div class="text-overlay">
+        <div class="page bg-[url('https://i.postimg.cc/W3pYN28w/scene3.png')]">
+            <div class="text-overlay">
                 <p class="story-text">בחזרה במטה בתל אביב, התנהלו ויכוחים אסטרטגיים יומיומיים. "פסגת המומחים", בה האגרונומית והגיאוגרף התווכחו על נושאים ברומו של עולם: מהו המסלול הנכון לטיול הבוקר? הדרך היעילה ביותר גיאוגרפית, או זו עם האנרגיה הטובה ביותר?</p>
             </div>
-            <audio id="audio-scene-3" src="https://files.catbox.moe/u9kprr.mp3" preload="auto"></audio>
+            <audio id="audio-scene-3" src="https://files.catbox.moe/77r59z.mp3" preload="auto"></audio>
         </div>
 
-        <!-- Page 6: Scene 4 -->
-        <div class="page" style="background-image: url('https://i.postimg.cc/HxqmGwXQ/scene4.png');">
+        <!-- Page 6: Scene 4 (Dead Sea) -->
+        <div class="page bg-[url('https://i.postimg.cc/15WKTxkq/scene4-new.png')]">
+            <div class="text-overlay">
+                <p class="story-text">משימתם הקבועה הבאה לקחה אותם לנקודה הנמוכה ביותר בעולם, למבצע חשאי במיוחד: "מבצע ים המלח". הסוכן רני נשלח למשימת הסתננות וספיגת אנרגיה סולארית, הידועה גם בשם "בטן-גב". במקביל, הסוכנת עדה הקימה עמדת תצפית מוצלת, שם תרגלה תרגילי גמישות מורכבים תוך שהיא נמנעת באלגנטיות ממגע ישיר עם האויב... השמש הקופחת.</p>
+            </div>
+            <audio id="audio-scene-4" src="https://files.catbox.moe/rx0836.mp3" preload="auto"></audio>
+        </div>
+
+        <!-- Page 7: Scene 5 (was 4) -->
+        <div class="page bg-[url('https://i.postimg.cc/HxqmGwXQ/scene5.png')]">
             <div class="text-overlay">
                 <p class="story-text">משימתם המורכבת ביותר: ניהול שתי אימפריות. עדה, אחראית על "הזרוע האמריקאית" ו"הסניף המקומי". רני, מנהל את הדיוויזיה הוותיקה והמפוארת שלו - הלא היא "זרוע אהרונסון". יחד, הם מהווים את הגשר שמחבר בין שתי השושלות.</p>
             </div>
-            <audio id="audio-scene-4" src="https://files.catbox.moe/716yv9.mp3" preload="auto"></audio>
+            <audio id="audio-scene-5" src="https://files.catbox.moe/5c0fpb.mp3" preload="auto"></audio>
         </div>
 
-        <!-- Page 7: Scene 5 -->
-        <div class="page" style="background-image: url('https://i.postimg.cc/CL23cf7T/scene5.png');">
+        <!-- Page 8: Scene 6 (was 5) -->
+        <div class="page bg-[url('https://i.postimg.cc/CL23cf7T/scene6.png')]">
             <div class="text-overlay">
                 <p class="story-text">במקביל, הסוכן רני ממשיך במשימת חייו: "מבצע: הספר". אבל לסוכנת עדה, "קצינת המוטיבציה הראשית", יש טקטיקה חדשה. במקום לזרז אותו, היא מנסה לפתות אותו עם תוכניות למבצע הבא שלהם... טיול חדש ליעד מרגש.</p>
             </div>
-            <audio id="audio-scene-5" src="https://files.catbox.moe/1gkf98.mp3" preload="auto"></audio>
+            <audio id="audio-scene-6" src="https://files.catbox.moe/3jbzlc.mp3" preload="auto"></audio>
         </div>
 
-        <!-- Page 8: Scene 6 -->
-        <div class="page" style="background-image: url('https://i.postimg.cc/tRBQVcVg/scene6.png');">
+        <!-- Page 9: Scene 7 (was 6) -->
+        <div class="page bg-[url('https://i.postimg.cc/tRBQVcVg/scene7.png')]">
             <div class="text-overlay">
                 <p class="story-text">אבל כל המשימות האלה היו רק חימום למבצע השיא. הגעה ליעדים הנועזים ביותר: יום הולדת 70 ויום הולדת 75! עדה השיגה דרגת "שלוות יוגה וחוכמת אדמה". רני השיג דרגת "גאונות פרופסורית וקסם של סבא".</p>
             </div>
-            <audio id="audio-scene-6" src="https://files.catbox.moe/udra1a.mp3" preload="auto"></audio>
+            <audio id="audio-scene-7" src="https://files.catbox.moe/lhbk5p.mp3" preload="auto"></audio>
         </div>
 
-        <!-- Page 9: Scene 7 -->
-        <div class="page" style="background-image: url('https://i.postimg.cc/tJSKQ1H6/scene7.png');">
+        <!-- Page 10: Scene 8 (was 7) -->
+        <div class="page bg-[url('https://i.postimg.cc/tJSKQ1H6/scene8.png')]">
             <div class="text-overlay">
                 <p class="story-text">אז לעדה ולרני, השותפים לדרך, המשימה הושלמה בהצלחה. בשבע השנים האלה, הראיתם לכולנו שההרפתקאות הגדולות באמת לא תלויות בגיל, שסיפור חדש יכול להתחיל כשלא מצפים לו, ושגם שני סוכנים שונים כל כך יכולים לבנות יחד חיים מדהימים - חיים שמלאים בצחוק, בחוכמה, ובוויכוח היומי החשוב על מה אוכלים לארוחת צהריים. אנחנו אוהבים אתכם ומאחלים לכם עוד שנים רבות של מבצעים משותפים. יום הולדת שמח!</p>
             </div>
-            <audio id="audio-scene-7" src="https://files.catbox.moe/gnbhzt.mp3" preload="auto"></audio>
+            <audio id="audio-scene-8" src="https://files.catbox.moe/0xk7f6.mp3" preload="auto"></audio>
         </div>
         
-        <!-- Page 10: Dedication -->
+        <!-- Page 11: Dedication -->
         <div class="page greeting-card-page" id="dedication-page">
-             <div class="greeting-card-content">
+            <div class="greeting-card-content">
                 <h2 class="font-bold">מזל טוב</h2>
                 <p class="mt-4">לרגל 7 שנים של הרפתקאות משותפות וימי הולדת 70 ו-75</p>
                 <svg class="w-24 h-8 my-4 md:my-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 101 12" stroke-width="1.5" stroke="currentColor">
@@ -310,7 +388,7 @@
                 <p class="text-2xl md:text-3xl" style="font-family: 'Dancing Script', cursive;">אוהבים,</p>
                 <p class="mt-2">שחר, צפריר וטל, גלעד, אמה וניב, והדר ואיציק</p>
             </div>
-            <audio id="audio-scene-8" src="https://files.catbox.moe/mhpvhj.mp3" preload="auto"></audio>
+            <audio id="audio-scene-9" src="https://files.catbox.moe/3qehbo.mp3" preload="auto"></audio>
         </div>
     </div>
 
@@ -318,6 +396,9 @@
     <button id="next-page-arrow" class="nav-arrow" title="העמוד הבא">&#x276F;</button>
     <button id="prev-page-arrow" class="nav-arrow" title="העמוד הקודם">&#x276E;</button>
     <div id="page-indicator" class="ui-element"></div>
+    
+    <!-- Countdown Timer -->
+    <div id="countdown-timer" class="ui-element">5</div>
 
     <!-- Floating Menu Button and Dropdown -->
     <div class="fixed top-4 right-4 z-[100] ui-element">
@@ -347,6 +428,12 @@
                 <div class="flex items-center justify-between">
                     <label for="music-toggle" class="text-xs sm:text-sm text-gray-700 select-none cursor-pointer">מוזיקת רקע</label>
                     <input type="checkbox" id="music-toggle" class="h-5 w-5 rounded text-blue-500 focus:ring-0">
+                </div>
+            </div>
+            <div class="p-1 sm:p-2">
+                <div class="flex items-center justify-between">
+                    <label for="timer-toggle" class="text-xs sm:text-sm select-none cursor-pointer" id="timer-label">טיימר ספירה לאחור</label>
+                    <input type="checkbox" id="timer-toggle" class="h-5 w-5 rounded text-blue-500 focus:ring-0" disabled>
                 </div>
             </div>
             <div class="p-1 sm:p-2 border-t border-gray-200 mt-1 sm:mt-2 pt-1 sm:pt-2">
@@ -387,6 +474,7 @@
     <audio id="background-music" src="https://files.catbox.moe/2rvixg.mp3" loop></audio>
 
     <script>
+        
         // --- Optimized State Management ---
         class StoryBookApp {
             constructor() {
@@ -404,22 +492,35 @@
                     isPaused: false,
                     isMuted: false,
                     currentAudio: null,
-                    originalTexts: new Map()
+                    originalTexts: new Map(),
+                    textFinished: false,
+                    audioFinished: false,
+                    timerVisible: false
                 };
                 
                 // Timeout references for cleanup
                 this.timeouts = {
                     typewriter: null,
-                    autoPlay: null
+                    autoPlay: null,
+                    pageTransition: null,
+                    countdown: null
+                };
+                
+                // Countdown state
+                this.countdown = {
+                    active: false,
+                    remainingTime: 0,
+                    interval: null
                 };
                 
                 // Constants
                 this.constants = {
-                    TYPEWRITER_DELAY: 75,
+                    TYPEWRITER_DELAY: 85,
                     AUTO_PLAY_DELAY: 4000,
                     HEADER_PAGE_DELAY: 10000,
                     DEFAULT_PAGE_DELAY: 2500,
-                    DEBOUNCE_DELAY: 250
+                    DEBOUNCE_DELAY: 250,
+                    PAGE_TRANSITION_DELAY: 2500
                 };
                 
                 // Bound methods for event listeners
@@ -440,6 +541,7 @@
                 elements.prevBtn = document.getElementById('prev-page-arrow');
                 elements.nextBtn = document.getElementById('next-page-arrow');
                 elements.pageIndicator = document.getElementById('page-indicator');
+                elements.countdownTimer = document.getElementById('countdown-timer');
                 elements.pages = document.querySelectorAll('.page');
                 
                 // Menu elements
@@ -451,6 +553,8 @@
                 elements.autoPlayToggle = document.getElementById('autoplay-toggle');
                 elements.narrationToggle = document.getElementById('narration-toggle');
                 elements.musicToggle = document.getElementById('music-toggle');
+                elements.timerToggle = document.getElementById('timer-toggle');
+                elements.timerLabel = document.getElementById('timer-label');
                 
                 // Media controls
                 elements.playPauseBtn = document.getElementById('play-pause-button');
@@ -502,23 +606,101 @@
             }
             
             // Utility: Clean up timeouts
-            clearAllTimeouts() {
-                Object.values(this.timeouts).forEach(timeout => {
-                    if (timeout) clearTimeout(timeout);
-                });
-                this.timeouts.typewriter = null;
-                this.timeouts.autoPlay = null;
+            clearAllTimeouts(includeCountdown = true) {
+                if (this.timeouts.typewriter) {
+                    clearTimeout(this.timeouts.typewriter);
+                    this.timeouts.typewriter = null;
+                }
+                if (this.timeouts.autoPlay) {
+                    clearTimeout(this.timeouts.autoPlay);
+                    this.timeouts.autoPlay = null;
+                }
+                if (this.timeouts.pageTransition) {
+                    clearTimeout(this.timeouts.pageTransition);
+                    this.timeouts.pageTransition = null;
+                }
+                
+                // Only clear countdown if explicitly requested
+                if (includeCountdown) {
+                    if (this.timeouts.countdown) {
+                        clearTimeout(this.timeouts.countdown);
+                        this.timeouts.countdown = null;
+                    }
+                    this.stopCountdown();
+                }
             }
 
-        // --- Initialization ---
+            // --- Countdown Timer Methods ---
+            startCountdown(durationMs) {
+                if (!this.state.autoPlayEnabled || this.state.isPaused) {
+                    return;
+                }
+                
+                this.stopCountdown();
+                this.countdown.active = true;
+                this.countdown.remainingTime = Math.ceil(durationMs / 1000);
+                
+                // Show timer only if visibility setting is on
+                if (this.state.timerVisible) {
+                    this.elements.countdownTimer.classList.add('active');
+                }
+                this.updateCountdownDisplay();
+                
+                // Update every second
+                this.countdown.interval = setInterval(() => {
+                    this.countdown.remainingTime--;
+                    this.updateCountdownDisplay();
+                    
+                    if (this.countdown.remainingTime <= 0) {
+                        this.stopCountdown();
+                    }
+                }, 1000);
+            }
+            
+            stopCountdown() {
+                if (this.countdown.interval) {
+                    clearInterval(this.countdown.interval);
+                    this.countdown.interval = null;
+                }
+                this.countdown.active = false;
+                this.countdown.remainingTime = 0;
+                this.elements.countdownTimer.classList.remove('active');
+            }
+            
+            updateCountdownDisplay() {
+                this.elements.countdownTimer.textContent = this.countdown.remainingTime;
+            }
+            
+            updateTimerToggleState() {
+                const isEnabled = this.state.autoPlayEnabled;
+                this.elements.timerToggle.disabled = !isEnabled;
+                
+                // Update label styling based on enabled state
+                if (isEnabled) {
+                    this.elements.timerLabel.classList.remove('text-gray-400');
+                    this.elements.timerLabel.classList.add('text-gray-700');
+                    this.elements.timerLabel.style.cursor = 'pointer';
+                } else {
+                    this.elements.timerLabel.classList.remove('text-gray-700');
+                    this.elements.timerLabel.classList.add('text-gray-400');
+                    this.elements.timerLabel.style.cursor = 'default';
+                    
+                    // If auto-play is disabled, hide timer and uncheck
+                    this.state.timerVisible = false;
+                    this.elements.timerToggle.checked = false;
+                    this.stopCountdown();
+                }
+            }
+
+            // --- Initialization ---
             initialize() {
                 this.safeExecute(() => {
                     // Store original text content
                     this.elements.storyTextElements.forEach((el, index) => {
                         this.state.originalTexts.set(index + 2, el.innerHTML);
                         el.innerHTML = this.state.originalTexts.get(index + 2);
-                el.classList.add('finished-typing');
-            });
+                        el.classList.add('finished-typing');
+                    });
                     
                     // Set up page z-index for stacking
                     this.elements.pages.forEach((page, index) => {
@@ -529,6 +711,7 @@
                     this.updatePagination();
                     this.setAutoPlayState(false);
                     this.setMusicState(false);
+                    this.updateTimerToggleState(); // Set initial timer toggle state
                     this.attachEventListeners();
                     
                     // Add keyboard navigation hints
@@ -558,10 +741,12 @@
             stopAllAudio() {
                 return this.safeExecute(() => {
                     const audioElements = document.querySelectorAll('audio:not(#background-music)');
+                    
                     audioElements.forEach(audio => {
-                    audio.pause();
-                    audio.currentTime = 0;
+                        audio.pause();
+                        audio.currentTime = 0;
                     });
+
                     this.state.currentAudio = null;
                 });
             }
@@ -571,24 +756,46 @@
                     this.stopAllAudio();
                     
                     if (!this.state.narrationEnabled || this.state.isPaused) {
+                        // If narration is disabled, mark audio as "finished" immediately
+                        this.state.audioFinished = true;
+                        this.checkAndStartAutoPlay();
                         return;
                     }
                     
                     const audio = this.elements.pages[this.state.currentPage]?.querySelector('audio');
-                    if (!audio) return;
+                    
+                    if (!audio) {
+                        // No audio element, mark as "finished"
+                        this.state.audioFinished = true;
+                        this.checkAndStartAutoPlay();
+                        return;
+                    }
                     
                     this.state.currentAudio = audio;
                     this.state.currentAudio.muted = this.state.isMuted;
                     
-                    const playPromise = audio.play();
-                    if (playPromise !== undefined) {
+                    // Remove any existing event listeners to prevent memory leaks
+                    const clonedAudio = audio.cloneNode(true);
+                    audio.parentNode.replaceChild(clonedAudio, audio);
+                    this.state.currentAudio = clonedAudio;
+                    this.state.currentAudio.muted = this.state.isMuted;
+                    
+                    const playPromise = clonedAudio.play();
+
+                    if (playPromise) {
                         playPromise
                             .then(() => {
-                                // Audio started successfully
-                                this.state.currentAudio.addEventListener('ended', () => this.autoTurnPage(), { once: true });
+                                // Audio started successfully - add fresh event listener
+                                this.state.currentAudio.addEventListener('ended', () => {
+                                    this.state.audioFinished = true;
+                                    this.checkAndStartAutoPlay();
+                                }, { once: true });
                             })
                             .catch(error => {
                                 console.warn("Audio autoplay blocked or failed:", error);
+                                // If audio fails to play, mark as finished to avoid blocking
+                                this.state.audioFinished = true;
+                                this.checkAndStartAutoPlay();
                             });
                     }
                 });
@@ -596,47 +803,83 @@
 
             // --- Optimized Core Logic ---
             typeWriter(element, text, i = 0) {
-                if (this.state.isPaused || !this.state.animationEnabled) return;
+                if (this.state.isPaused || !this.state.animationEnabled) {
+                    return;
+                }
                 
-            if (i < text.length) {
-                element.innerHTML += text.charAt(i);
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
                     this.timeouts.typewriter = setTimeout(() => {
                         this.typeWriter(element, text, i + 1);
                     }, this.constants.TYPEWRITER_DELAY);
-            } else {
-                element.classList.add('finished-typing');
-                    if (this.state.autoPlayEnabled && !this.state.narrationEnabled) {
-                        this.startAutoPlayTimer();
-                    }
+                } else {
+                    element.classList.add('finished-typing');
+                    this.state.textFinished = true;
+                    this.checkAndStartAutoPlay();
                 }
             }
 
             handlePageContent() {
                 return this.safeExecute(() => {
-                    this.clearAllTimeouts();
-                    this.playCurrentPageAudio();
-
+                    // Clear timeouts but keep countdown running (will be replaced by startPageCountdown)
+                    this.clearAllTimeouts(false);
+                    
+                    // Reset completion flags for new page
+                    this.state.textFinished = false;
+                    this.state.audioFinished = false;
+                    
+                    // Start countdown immediately when page loads
+                    this.startPageCountdown();
+                    
                     const textElement = this.elements.pages[this.state.currentPage]?.querySelector('.story-text');
                     
-            if (textElement) {
-                textElement.innerHTML = '';
-                textElement.classList.remove('finished-typing');
+                    if (textElement) {
+                        textElement.innerHTML = '';
+                        textElement.classList.remove('finished-typing');
                         const fullText = this.state.originalTexts.get(this.state.currentPage);
 
                         if (this.state.animationEnabled && !this.state.isPaused && fullText) {
-                            this.typeWriter(textElement, fullText);
-                        } else if (fullText) {
-                    textElement.innerHTML = fullText;
-                    textElement.classList.add('finished-typing');
-                            if (this.state.autoPlayEnabled && !this.state.isPaused && !this.state.narrationEnabled) {
-                                this.startAutoPlayTimer();
+                            // Only delay if autoplay is enabled (to allow page transition to complete)
+                            if (this.state.autoPlayEnabled) {
+                                this.timeouts.pageTransition = setTimeout(() => {
+                                    this.playCurrentPageAudio();
+                                    this.typeWriter(textElement, fullText);
+                                }, this.constants.PAGE_TRANSITION_DELAY);
+                            } else {
+                                // No delay when manually controlling pages
+                                this.playCurrentPageAudio();
+                                this.typeWriter(textElement, fullText);
                             }
+                        } else if (fullText) {
+                            // No delay for instant text - show immediately
+                            this.playCurrentPageAudio();
+                            textElement.innerHTML = fullText;
+                            textElement.classList.add('finished-typing');
+                            this.state.textFinished = true;
+                            this.checkAndStartAutoPlay();
                         }
-                    } else if (this.state.autoPlayEnabled && !this.state.isPaused) {
-                        const delay = this.state.currentPage === 1 ? 
-                            this.constants.HEADER_PAGE_DELAY : 
-                            this.constants.DEFAULT_PAGE_DELAY;
-                        this.startAutoPlayTimer(delay);
+                    } else {
+                        // No text element - apply same delay logic for audio
+                        if (this.state.autoPlayEnabled) {
+                            // Check if this is the last page - no delay needed
+                            if (this.state.currentPage === this.state.totalPages - 1) {
+                                // Last page - start audio immediately
+                                this.playCurrentPageAudio();
+                                this.state.textFinished = true;
+                                this.checkAndStartAutoPlay();
+                            } else {
+                                // Other pages - delay audio start to allow page transition to complete
+                                this.timeouts.pageTransition = setTimeout(() => {
+                                    this.playCurrentPageAudio();
+                                    // No text, so mark as finished immediately
+                                    this.state.textFinished = true;
+                                    this.checkAndStartAutoPlay();
+                                }, this.constants.PAGE_TRANSITION_DELAY);
+                            }
+                        } else {
+                            // No delay when manually controlling pages
+                            this.playCurrentPageAudio();
+                        }
                     }
                 });
             }
@@ -665,17 +908,22 @@
                     this.state.autoPlayEnabled = isPlaying;
                     this.elements.autoPlayToggle.checked = isPlaying;
                     this.elements.playPauseBtn.classList.toggle('hidden', !isPlaying);
+                    
+                    // Update timer toggle availability
+                    this.updateTimerToggleState();
             
-            if (isPlaying) {
-                document.body.classList.add('autoplay-active');
+                    if (isPlaying) {
+                        document.body.classList.add('autoplay-active');
                         this.state.isPaused = false;
                         this.updatePlayPauseIcon();
                         this.handlePageContent();
-            } else {
-                document.body.classList.remove('autoplay-active');
+                    } else {
+                        document.body.classList.remove('autoplay-active');
                         this.state.isPaused = false;
                         this.updatePlayPauseIcon();
                         this.clearAllTimeouts();
+                        this.stopCountdown();
+                        
                         if (this.state.currentAudio) {
                             this.state.currentAudio.pause();
                         }
@@ -690,6 +938,107 @@
                 }
             }
 
+            checkAndStartAutoPlay() {
+                // Only start auto-play timer when both text and audio are finished (if applicable)
+                if (!this.state.autoPlayEnabled || this.state.isPaused) {
+                    return;
+                }
+
+                const textElement = this.elements.pages[this.state.currentPage]?.querySelector('.story-text');
+                const hasText = textElement && this.state.originalTexts.get(this.state.currentPage);
+                const hasAudio = this.state.narrationEnabled;
+
+                // Determine what needs to finish based on current settings
+                const textShouldFinish = hasText;
+                const audioShouldFinish = hasAudio;
+
+                // Check if everything that should finish has finished
+                const textReady = !textShouldFinish || this.state.textFinished;
+                const audioReady = !audioShouldFinish || this.state.audioFinished;
+
+                if (textReady && audioReady) {
+                    // Both are ready, start the delay before auto-page-turn
+                    // Don't clear countdown - it should continue running
+                    let delay;
+                    if (this.state.currentPage === 1) {
+                        delay = this.constants.HEADER_PAGE_DELAY;
+                    } else if (!this.state.animationEnabled && !this.state.narrationEnabled) {
+                        // Special case: when both text animation and narration are off, use longer delay
+                        delay = this.constants.HEADER_PAGE_DELAY; // 10 seconds
+                    } else {
+                        delay = this.constants.AUTO_PLAY_DELAY; // 4 seconds
+                    }
+                    this.startAutoPlayTimer(delay);
+                }
+            }
+
+            calculateContentDuration() {
+                const textElement = this.elements.pages[this.state.currentPage]?.querySelector('.story-text');
+                const fullText = this.state.originalTexts.get(this.state.currentPage);
+                const audio = this.elements.pages[this.state.currentPage]?.querySelector('audio');
+                
+                let textDuration = 0;
+                let audioDuration = 0;
+                
+                // Calculate text animation duration
+                if (this.state.animationEnabled && textElement && fullText) {
+                    // Strip HTML tags to get actual character count
+                    const textContent = fullText.replace(/<[^>]*>/g, '');
+                    textDuration = (textContent.length * this.constants.TYPEWRITER_DELAY) + this.constants.PAGE_TRANSITION_DELAY;
+                }
+                
+                // Calculate audio duration
+                if (this.state.narrationEnabled && audio) {
+                    if (audio.duration && !isNaN(audio.duration)) {
+                        audioDuration = this.constants.PAGE_TRANSITION_DELAY + (audio.duration * 1000);
+                    } else {
+                        // Fallback: estimate based on average reading speed if audio duration unavailable
+                        const textContent = fullText ? fullText.replace(/<[^>]*>/g, '') : '';
+                        const estimatedAudioDuration = Math.max(3000, textContent.length * 100); // ~100ms per character
+                        audioDuration = this.constants.PAGE_TRANSITION_DELAY + estimatedAudioDuration;
+                    }
+                }
+                
+                // Return the longer of the two (since they run in parallel)
+                const contentDuration = Math.max(textDuration, audioDuration);
+                
+                // Debug logging
+                console.log(`Page ${this.state.currentPage}: text=${textDuration}ms, audio=${audioDuration}ms, content=${contentDuration}ms`);
+                
+                return contentDuration;
+            }
+
+            startPageCountdown() {
+                // Start countdown immediately when page turns (if auto-play is enabled)
+                if (!this.state.autoPlayEnabled || this.state.isPaused) {
+                    return;
+                }
+                
+                // Don't show countdown on the last page
+                if (this.state.currentPage === this.state.totalPages - 1) {
+                    return;
+                }
+                
+                // Calculate actual content duration + final delay
+                const contentDuration = this.calculateContentDuration();
+                let finalDelay;
+                if (this.state.currentPage === 1) {
+                    finalDelay = this.constants.HEADER_PAGE_DELAY;
+                } else if (!this.state.animationEnabled && !this.state.narrationEnabled) {
+                    // Special case: when both text animation and narration are off, use longer delay
+                    finalDelay = this.constants.HEADER_PAGE_DELAY; // 10 seconds
+                } else {
+                    finalDelay = this.constants.AUTO_PLAY_DELAY; // 4 seconds
+                }
+                const totalDuration = contentDuration + finalDelay;
+                
+                // Debug logging for countdown
+                console.log(`Page ${this.state.currentPage} countdown: content=${contentDuration}ms + delay=${finalDelay}ms = total=${totalDuration}ms (${Math.ceil(totalDuration/1000)}s)`);
+                
+                // Show countdown with real duration
+                this.startCountdown(totalDuration);
+            }
+
             startAutoPlayTimer(delay = this.constants.AUTO_PLAY_DELAY) {
                 if (!this.state.autoPlayEnabled || this.state.isPaused) {
                     return;
@@ -700,9 +1049,14 @@
                     return;
                 }
                 
-                this.clearAllTimeouts();
+                // Clear only the autoPlay timeout, keep countdown running
+                if (this.timeouts.autoPlay) {
+                    clearTimeout(this.timeouts.autoPlay);
+                    this.timeouts.autoPlay = null;
+                }
+                
                 this.timeouts.autoPlay = setTimeout(() => this.autoTurnPage(), delay);
-        }
+            }
 
             interruptAutoPlay(turnOff = true) {
                 if (this.state.autoPlayEnabled) {
@@ -712,6 +1066,7 @@
                         this.state.isPaused = true;
                         this.updatePlayPauseIcon();
                         this.clearAllTimeouts();
+                        this.stopCountdown();
                         if (this.state.currentAudio) {
                             this.state.currentAudio.pause();
                         }
@@ -773,9 +1128,7 @@
                         [this.state.totalPages - 1]: "הקדשה"
                     };
                     
-                    this.elements.pageIndicator.textContent = pageNames[this.state.currentPage] || 
-                        `${this.state.currentPage - 1} / ${this.state.totalPages - 3}`;
-                    
+                    this.elements.pageIndicator.textContent = pageNames[this.state.currentPage] || `${this.state.currentPage - 1} / ${this.state.totalPages - 3}`;
                     this.elements.prevBtn.disabled = (this.state.currentPage === 0);
                     this.elements.nextBtn.disabled = (this.state.currentPage === this.state.totalPages - 1);
                 });
@@ -890,6 +1243,7 @@
                 
                 if (this.state.isPaused) {
                     this.clearAllTimeouts();
+                    this.stopCountdown();
                     if (this.state.currentAudio) this.state.currentAudio.pause();
                     if (this.state.musicEnabled) this.elements.backgroundMusic.pause();
                 } else {
@@ -968,12 +1322,24 @@
                     this.setMusicState(this.elements.musicToggle.checked);
                 });
                 
+                this.elements.timerToggle.addEventListener('change', () => {
+                    this.state.timerVisible = this.elements.timerToggle.checked;
+                    if (!this.state.timerVisible) {
+                        // Just hide the timer, don't stop the countdown interval
+                        this.elements.countdownTimer.classList.remove('active');
+                    } else if (this.state.autoPlayEnabled && this.countdown.active) {
+                        // Show existing countdown if it's already running
+                        this.elements.countdownTimer.classList.add('active');
+                    }
+                });
+                
                 this.elements.volumeSlider.addEventListener('input', this.boundMethods.handleVolumeChange);
             }
             
             // Cleanup method for memory management
             destroy() {
                 this.clearAllTimeouts();
+                this.stopCountdown();
                 if (this.state.currentAudio) {
                     this.state.currentAudio.pause();
                 }
