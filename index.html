@@ -22,16 +22,16 @@
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&family=Dancing+Script:wght@700&family=Playpen+Sans+Hebrew:wght@700&display=swap" rel="stylesheet">
     
     <!-- Preload critical audio files -->
-    <link rel="preload" href="https://files.catbox.moe/9546ir.mp3" as="audio" type="audio/mpeg">
-    <link rel="preload" href="https://files.catbox.moe/bt2wil.mp3" as="audio" type="audio/mpeg">
-    <link rel="preload" href="https://files.catbox.moe/77r59z.mp3" as="audio" type="audio/mpeg">
-    <link rel="preload" href="https://files.catbox.moe/rx0836.mp3" as="audio" type="audio/mpeg">
-    <link rel="preload" href="https://files.catbox.moe/5c0fpb.mp3" as="audio" type="audio/mpeg">
-    <link rel="preload" href="https://files.catbox.moe/3jbzlc.mp3" as="audio" type="audio/mpeg">
-    <link rel="preload" href="https://files.catbox.moe/lhbk5p.mp3" as="audio" type="audio/mpeg">
-    <link rel="preload" href="https://files.catbox.moe/0xk7f6.mp3" as="audio" type="audio/mpeg">
-    <link rel="preload" href="https://files.catbox.moe/3qehbo.mp3" as="audio" type="audio/mpeg">
-    <link rel="preload" href="https://files.catbox.moe/2rvixg.mp3" as="audio" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/9546ir.mp3" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/bt2wil.mp3" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/77r59z.mp3" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/rx0836.mp3" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/5c0fpb.mp3" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/3jbzlc.mp3" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/lhbk5p.mp3" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/0xk7f6.mp3" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/3qehbo.mp3" type="audio/mpeg">
+    <link rel="preload" href="https://files.catbox.moe/2rvixg.mp3" type="audio/mpeg">
     
     <!-- Preload critical images -->
     <link rel="preconnect" href="https://i.postimg.cc/">
@@ -43,7 +43,7 @@
     <link rel="preload" href="https://i.postimg.cc/HxqmGwXQ/scene5.png" as="image" type="image/png">
     <link rel="preload" href="https://i.postimg.cc/CL23cf7T/scene6.png" as="image" type="image/png">
     <link rel="preload" href="https://i.postimg.cc/tRBQVcVg/scene7.png" as="image" type="image/png">
-    <link rel="preload" href="https://i.postimg.cc/HndHk3QF/scene8-new.png" as="image" type="image/png">
+    <link rel="preload" href="https://i.postimg.cc/tJSKQ1H6/scene8_new.png" as="image" type="image/png">
     
     <style>
         /* CSS Variables */
@@ -376,7 +376,7 @@
         </div>
 
         <!-- Page 10: Scene 8 (was 7) -->
-        <div class="page bg-[url('https://i.postimg.cc/HndHk3QF/scene8-new.png')]">
+        <div class="page bg-[url('https://i.postimg.cc/tJSKQ1H6/scene8_new.png')]">
             <div class="text-overlay">
                 <p class="story-text">אז לעדה ולרני, השותפים לדרך, המשימה הושלמה בהצלחה. בשבע השנים האלה, הראיתם לכולנו שההרפתקאות הגדולות באמת לא תלויות בגיל, שסיפור חדש יכול להתחיל כשלא מצפים לו, ושגם שני סוכנים שונים כל כך יכולים לבנות יחד חיים מדהימים - חיים שמלאים בצחוק, בחוכמה, ובוויכוח היומי החשוב על מה אוכלים לארוחת צהריים. אנחנו אוהבים אתכם ומאחלים לכם עוד שנים רבות של מבצעים משותפים. יום הולדת שמח!</p>
             </div>
@@ -777,25 +777,29 @@
                         return;
                     }
                     
+                    // Use the audio element directly without cloning
                     this.state.currentAudio = audio;
                     this.state.currentAudio.muted = this.state.isMuted;
                     
-                    // Remove any existing event listeners to prevent memory leaks
-                    const clonedAudio = audio.cloneNode(true);
-                    audio.parentNode.replaceChild(clonedAudio, audio);
-                    this.state.currentAudio = clonedAudio;
-                    this.state.currentAudio.muted = this.state.isMuted;
+                    // Define the event handler as a named function so we can remove it later
+                    const handleAudioEnded = () => {
+                        this.state.audioFinished = true;
+                        this.checkAndStartAutoPlay();
+                    };
                     
-                    const playPromise = clonedAudio.play();
+                    // Remove any existing ended event listener (in case it exists)
+                    // The { once: true } option automatically removes the listener after firing
+                    // but we're being extra careful here
+                    this.state.currentAudio.removeEventListener('ended', handleAudioEnded);
+                    
+                    const playPromise = this.state.currentAudio.play();
 
                     if (playPromise) {
                         playPromise
                             .then(() => {
-                                // Audio started successfully - add fresh event listener
-                                this.state.currentAudio.addEventListener('ended', () => {
-                                    this.state.audioFinished = true;
-                                    this.checkAndStartAutoPlay();
-                                }, { once: true });
+                                // Audio started successfully - add event listener with once: true
+                                // This automatically removes the listener after it fires once
+                                this.state.currentAudio.addEventListener('ended', handleAudioEnded, { once: true });
                             })
                             .catch(error => {
                                 console.warn("Audio autoplay blocked or failed:", error);
@@ -834,8 +838,11 @@
                     this.state.textFinished = false;
                     this.state.audioFinished = false;
                     
-                    // Start countdown immediately when page loads
-                    this.startPageCountdown();
+                    // Delay countdown start to allow audio metadata to load
+                    // Start countdown after a brief delay to ensure audio metadata is available
+                    if (this.state.autoPlayEnabled) {
+                        setTimeout(() => this.startPageCountdown(), 500);
+                    }
                     
                     const textElement = this.elements.pages[this.state.currentPage]?.querySelector('.story-text');
                     
